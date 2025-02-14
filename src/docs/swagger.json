@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Hospital Backend System API",
+    "description": "API documentation for the hospital backend system",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "summary": "User Signup",
+        "description": "Registers a new user (Doctor or Patient).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "format": "password" },
+                  "role": { "type": "string", "enum": ["doctor", "patient"] }
+                },
+                "required": ["name", "email", "password", "role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User registered successfully" },
+          "400": { "description": "User already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "User Login",
+        "description": "Authenticates a user and returns a JWT token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "format": "password" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "400": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/doctors/assign": {
+      "post": {
+        "summary": "Assign a doctor to a patient",
+        "description": "Patients can select a doctor.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "doctorId": { "type": "string" }
+                },
+                "required": ["doctorId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Doctor assigned successfully" },
+          "403": { "description": "Only patients can select doctors" }
+        }
+      }
+    },
+    "/doctors/patients": {
+      "get": {
+        "summary": "Retrieve assigned patients",
+        "description": "Doctors can view their assigned patients.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of patients retrieved" },
+          "403": { "description": "Unauthorized access" }
+        }
+      }
+    },
+    "/notes/submit": {
+      "post": {
+        "summary": "Submit Doctor Notes",
+        "description": "Allows a doctor to submit notes for a patient. Notes are encrypted and processed via AI.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patientId": { "type": "string" },
+                  "note": { "type": "string" }
+                },
+                "required": ["patientId", "note"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Note submitted successfully" },
+          "500": { "description": "Error processing AI" }
+        }
+      }
+    },
+    "/notes/patient/{patientId}": {
+      "get": {
+        "summary": "Retrieve patient notes",
+        "description": "Doctors and patients can retrieve encrypted notes.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of notes" },
+          "403": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/reminders/patient/{patientId}": {
+      "get": {
+        "summary": "Get patient reminders",
+        "description": "Retrieves all scheduled reminders for a patient.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of reminders" },
+          "403": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/reminders/check-in/{reminderId}": {
+      "put": {
+        "summary": "Check-in a reminder",
+        "description": "Marks a reminder as completed by the patient.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "reminderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Reminder checked in successfully" },
+          "403": { "description": "Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
